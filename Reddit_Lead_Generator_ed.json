@@ -1,0 +1,1408 @@
+{
+  "name": "Reddit Lead Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const items = $input.item.json.items;\n\nreturn items.map(post => {\n  const title = post.title || \"\";\n  const body = post.content || post.description || \"\";\n  const cleanBody = body.replace(/<[^>]*>/g, \" \").replace(/\\s\\s+/g, \" \").trim();\n  const link = post.link || \"\";\n  const author = post.author || \"\";\n  const pubDate = post.pubDate || \"\";\n\n  return {\n    json: {\n      title,\n      body: cleanBody,\n      link,\n      author,\n      pubDate,\n      promptContext: `POST TITLE: ${title}\\n\\nPOST BODY: ${cleanBody}`\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -816,
+        208
+      ],
+      "id": "3010e5ca-1076-4477-9351-94c6cb4c055c",
+      "name": "Parser for HTTP Request 1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.item.json.items;\n\nreturn items.map(post => {\n  const title = post.title || \"\";\n  const body = post.content || post.description || \"\";\n  const cleanBody = body.replace(/<[^>]*>/g, \" \").replace(/\\s\\s+/g, \" \").trim();\n  const link = post.link || \"\";\n  const author = post.author || \"\";\n  const pubDate = post.pubDate || \"\";\n\n  return {\n    json: {\n      title,\n      body: cleanBody,\n      link,\n      author,\n      pubDate,\n      promptContext: `POST TITLE: ${title}\\n\\nPOST BODY: ${cleanBody}`\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -816,
+        400
+      ],
+      "id": "d0a7039a-6184-4227-8994-9add414e43c0",
+      "name": "Parser for HTTP Request 2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.item.json.items;\n\nreturn items.map(post => {\n  const title = post.title || \"\";\n  const body = post.content || post.description || \"\";\n  const cleanBody = body.replace(/<[^>]*>/g, \" \").replace(/\\s\\s+/g, \" \").trim();\n  const link = post.link || \"\";\n  const author = post.author || \"\";\n  const pubDate = post.pubDate || \"\";\n\n  return {\n    json: {\n      title,\n      body: cleanBody,\n      link,\n      author,\n      pubDate,\n      promptContext: `POST TITLE: ${title}\\n\\nPOST BODY: ${cleanBody}`\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -816,
+        592
+      ],
+      "id": "a18f54b4-1296-47c1-b268-c1addcfd5df6",
+      "name": "Parser for HTTP Request 3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nreturn items.filter(item => {\n  const text = ((item.json.title || \"\") + \" \" + (item.json.body || \"\")).toLowerCase();\n  return /looking for|recommend|alternative to|switching from|replacing|best tool|which tool|need a tool|frustrated with|migrating from|evaluating|comparing|can anyone suggest|what do you use|help me choose/.test(text);\n}).map(item => ({ json: item.json }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        400
+      ],
+      "id": "12ca40eb-2012-4d7b-9088-0ab10efaf29a",
+      "name": "Keyword filter"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.item.json.content?.parts?.[0]?.text || \"\";\n\nconst cleaned = raw\n  .replace(/```json\\n?/gi, \"\")\n  .replace(/```\\n?/gi, \"\")\n  .trim();\n\nlet parsed;\ntry {\n  parsed = JSON.parse(cleaned);\n} catch(e) {\n  parsed = {\n    intent_score: 0,\n    primary_pain_point: \"Parse error\",\n    score_reasoning: \"Could not parse\",\n    draft_reply: null\n  };\n}\n\nconst prev = $('Keyword filter').item.json;\n\nreturn [{\n  json: {\n    title: prev.title,\n    body: prev.body,\n    link: prev.link,\n    author: prev.author,\n    pubDate: prev.pubDate,\n    intent_score: parsed.intent_score,\n    primary_pain_point: parsed.primary_pain_point,\n    score_reasoning: parsed.score_reasoning,\n    draft_reply: parsed.draft_reply\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        400
+      ],
+      "id": "c8ea2ce2-ea3a-45b3-b573-9133e88706be",
+      "name": "JSON parser after Gemini"
+    },
+    {
+      "parameters": {
+        "jsCode": "const clean = (str) => {\n  if (!str) return \"N/A\";\n  return String(str)\n    .replace(/[<>{}()\\[\\]\\*\\_]/g, \"\")\n    .replace(/&/g, \"and\")\n    .trim();\n};\n\nreturn [{\n  json: {\n    title: clean($json.title),\n    author: clean($json.author),\n    link: \"reddit.com\" + ($json.link || \"\").replace(\"https://www.reddit.com\", \"\").replace(\"https://reddit.com\", \"\"),\n    intent_score: $json.intent_score || 0,\n    primary_pain_point: clean($json.primary_pain_point),\n    score_reasoning: clean($json.score_reasoning),\n    draft_reply: clean($json.draft_reply)\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        656,
+        400
+      ],
+      "id": "b71f965d-e578-489c-8e58-dbf1741a9935",
+      "name": "Text cleaner"
+    },
+    {
+      "parameters": {
+        "url": "https://api.rss2json.com/v1/api.json?rss_url=https://www.reddit.com/r/SaaS/new/.rss",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1040,
+        208
+      ],
+      "id": "5d0ab052-048a-4820-a878-717572be3064",
+      "name": "Reddit SaaS RSS"
+    },
+    {
+      "parameters": {
+        "url": "https://api.rss2json.com/v1/api.json?rss_url=https://www.reddit.com/r/Entrepreneur/new/.rss",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1040,
+        400
+      ],
+      "id": "ebb3ba9f-354f-4616-831d-c62de9ec8d79",
+      "name": "Reddit Entrepreneur RSS"
+    },
+    {
+      "parameters": {
+        "url": "https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.reddit.com%2Fsearch.rss%3Fq%3Dlooking%2Bfor%2BCRM%2BOR%2Brecommend%2Ba%2Btool%26sort%3Dnew",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "en-US,en;q=0.9"
+            },
+            {
+              "name": "Cache-Control",
+              "value": "no-cache"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1040,
+        592
+      ],
+      "id": "a3f443f3-8ad8-4eb4-8d4c-585b615c5dc7",
+      "name": "Reddit Search RSS"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -592,
+        384
+      ],
+      "id": "6a748eb1-8116-4d1e-ad14-8dfee7b07bfe",
+      "name": "Merge All Sources"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-pro",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-pro"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a B2B sales intelligence analyst. Analyze this Reddit post and return ONLY raw JSON, no markdown, no explanation.\n\nSCORING RUBRIC:\n9-10: Actively seeking vendor/tool, comparing products, urgent purchase decision\n7-8: Specific business problem, frustrated with current tool, seeking solutions\n5-6: General curiosity, broad research\n3-4: Venting, no solution-seeking\n1-2: Off-topic, no commercial relevance\n\nREPLY RULES (only if score ≥ 7):\n- 2 sentences only\n- Lead with empathy\n- No product/brand names\n- Sound like a helpful peer\n- End with one open question\n- If score < 7, set draft_reply to null\n\nRETURN THIS JSON ONLY:\n{\n  \"intent_score\": <1-10>,\n  \"primary_pain_point\": \"<one sentence>\",\n  \"score_reasoning\": \"<one sentence>\",\n  \"draft_reply\": \"<2 sentences or null>\"\n}\n\nPOST:\n{{$json.promptContext}}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        80,
+        400
+      ],
+      "id": "82039bdf-c7f7-465b-842a-dcfcfbc2b8ca",
+      "name": "Gemini Score",
+      "retryOnFail": false,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "tz0aeYSJE4XwqFzu",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a5757c03-0ba5-4b92-b8f2-12daaedf2ecb",
+              "leftValue": "={{$json.intent_score}}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        880,
+        400
+      ],
+      "id": "7d06579d-a772-4ca9-ba50-7b269e81b435",
+      "name": "Intent Filter"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=Score: {{$json.intent_score}}\n\nPost: {{$json.title}}\n\nAuthor: {{$json.author}}\n\nPain: {{$json.primary_pain_point}}\n\nReasoning: {{$json.score_reasoning}}\n\nReply: {{$json.draft_reply}}\n\nID: {{$json.author}}-{{$json.intent_score}}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1104,
+        304
+      ],
+      "id": "78ee73f5-6b0f-4879-9204-2d082e5e8cc1",
+      "name": "Telegram Alert",
+      "webhookId": "96c6ddf9-812e-4f74-9efc-edc28fcfed71",
+      "credentials": {
+        "telegramApi": {
+          "id": "y2464Jj0GCO9RMut",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "14aGrkb-kcnHaH-LCYAt0OZC_gUGLkIbQ-oHUBiVJXWM",
+          "mode": "list",
+          "cachedResultName": "Reddit Sales Data ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14aGrkb-kcnHaH-LCYAt0OZC_gUGLkIbQ-oHUBiVJXWM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1813376797,
+          "mode": "list",
+          "cachedResultName": "High_Intent_Leads ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14aGrkb-kcnHaH-LCYAt0OZC_gUGLkIbQ-oHUBiVJXWM/edit#gid=1813376797"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{$now.toFormat('yyyy-MM-dd HH:mm')}}",
+            "Title": "={{$('Text cleaner').item.json.title}}",
+            "Intent_score": "={{$('Text cleaner').item.json.intent_score}}",
+            "Pain_point": "={{$('Text cleaner').item.json.primary_pain_point}}",
+            "Draft_reply": "={{$('Text cleaner').item.json.draft_reply}}",
+            "Author": "={{$('Text cleaner').item.json.author}}",
+            "Reasoning": "={{$('Text cleaner').item.json.score_reasoning}}",
+            "Week_number": "={{$now.toFormat('W')}}",
+            "Subreddit": "=",
+            "Day_of_week": "={{$now.toFormat('cccc')}}",
+            "ID": "={{$json.author}}-{{$json.intent_score}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Intent_score",
+              "displayName": "Intent_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Pain_point",
+              "displayName": "Pain_point",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Draft_reply",
+              "displayName": "Draft_reply",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Author",
+              "displayName": "Author",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reasoning",
+              "displayName": "Reasoning",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Week_number",
+              "displayName": "Week_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Subreddit",
+              "displayName": "Subreddit",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Day_of_week",
+              "displayName": "Day_of_week",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1552,
+        304
+      ],
+      "id": "39661c72-b1a1-49e0-8745-a7046876657c",
+      "name": "Log High Intent",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ny6GxkCQnHWYWsf7",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1264,
+        -240
+      ],
+      "id": "ade07a35-97db-4cfd-8508-21950f6d4489",
+      "name": "Weekly Digest Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "14aGrkb-kcnHaH-LCYAt0OZC_gUGLkIbQ-oHUBiVJXWM",
+          "mode": "list",
+          "cachedResultName": "Reddit Sales Data ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14aGrkb-kcnHaH-LCYAt0OZC_gUGLkIbQ-oHUBiVJXWM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1813376797,
+          "mode": "list",
+          "cachedResultName": "High_Intent_Leads ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14aGrkb-kcnHaH-LCYAt0OZC_gUGLkIbQ-oHUBiVJXWM/edit#gid=1813376797"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1040,
+        -240
+      ],
+      "id": "31628f17-eb66-4e66-a635-e6611783d61b",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ny6GxkCQnHWYWsf7",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nif (items.length === 0) {\n  return [{\n    json: {\n      summary: \"No high intent leads found this week.\"\n    }\n  }];\n}\n\nconst leads = items.map(item => ({\n  title: item.json.title || \"N/A\",\n  score: item.json.intent_score || 0,\n  pain: item.json.pain_point || \"N/A\",\n  author: item.json.author || \"N/A\"\n}));\n\nconst avgScore = (leads.reduce((sum, l) => sum + Number(l.score), 0) / leads.length).toFixed(1);\n\nconst summary = `WEEKLY DIGEST\nTotal Leads: ${leads.length}\nAverage Score: ${avgScore}\n\nTOP LEADS:\n${leads.slice(0, 5).map((l, i) => \n  `${i+1}. Score ${l.score}: ${l.title}`\n).join('\\n')}`;\n\nreturn [{ json: { summary, total: leads.length, avg_score: avgScore } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -816,
+        -240
+      ],
+      "id": "740c70fa-1b95-4fae-b451-45c71e22cae7",
+      "name": "Prepare Digest Data"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a GTM analyst. Based on this weekly Reddit monitoring data, provide a brief strategic summary.\n\nData:\n{{$json.summary}}\n\nReturn a short 5-sentence analysis covering:\n1. Overall intent trend this week\n2. Most common pain points\n3. Best opportunity to engage\n4. Recommended action for BD team\n5. One sentence prediction for next week"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -592,
+        -240
+      ],
+      "id": "24c03ed4-8e45-4ba4-b277-d76832e144ec",
+      "name": "Gemini Digest",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "tz0aeYSJE4XwqFzu",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=WEEKLY DIGEST\n\nTotal Leads This Week: {{$json.total}}\nAverage Intent Score: {{$json.avg_score}}\n\nAI ANALYSIS:\n{{$('Gemini Digest').item.json.content.parts[0].text}}\n\n---\nPowered by Reddit Lead Generator",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -240,
+        -240
+      ],
+      "id": "9b175e7b-9c22-4d64-bf97-111e87f8ba96",
+      "name": "Weekly Digest Alert",
+      "webhookId": "4b6ccdb1-efc2-4f6e-8f6a-4232df056262",
+      "credentials": {
+        "telegramApi": {
+          "id": "y2464Jj0GCO9RMut",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 21
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1264,
+        400
+      ],
+      "id": "080a0a9a-b769-4201-b727-f995b2f3e5f4",
+      "name": "Everyday Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "removeItemsSeenInPreviousExecutions",
+        "dedupeValue": "={{ $json.link }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        -144,
+        400
+      ],
+      "id": "64db9468-d0d7-457c-ab69-f605dc9ceaeb",
+      "name": "Remove Duplicates"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c42a4164-4802-4fee-a2e5-f12f363a6377",
+              "leftValue": "={{$json.message.text.toUpperCase()}}",
+              "rightValue": "APPROVE",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1040,
+        -16
+      ],
+      "id": "3200fbdc-3146-4f76-9fda-7cdedfc51bf1",
+      "name": "Approval filter"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.rss2json.com/v1/api.json?rss_url=https://www.reddit.com/user/{{$('Keyword filter').item.json.author}}/submitted.rss",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1264,
+        -464
+      ],
+      "id": "06801544-20f1-4c51-b192-942415519746",
+      "name": "Reddi author lookup"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.item.json.data;\n\nconst accountAgeDays = Math.floor(\n  (Date.now() - data.created_utc * 1000) / (1000 * 60 * 60 * 24)\n);\n\nreturn [{\n  json: {\n    author: data.name,\n    karma: data.total_karma || 0,\n    account_age_days: accountAgeDays,\n    is_verified: data.verified || false,\n    is_qualified: accountAgeDays > 180 && data.total_karma > 100\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1040,
+        -464
+      ],
+      "id": "b7028216-7b96-4fbd-878b-4248b352e10a",
+      "name": "Parse Author Data"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cf29716e-fea9-4d1f-9acc-dfdf01e369b6",
+              "leftValue": "={{$json.is_qualified}}",
+              "rightValue": "True",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -816,
+        -464
+      ],
+      "id": "1be281c7-372a-4299-ae86-5ba31ee5ce0e",
+      "name": "Author Quality Check"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "Reply with APPROVE or SKIP for the above lead.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1328,
+        304
+      ],
+      "id": "b1e017bf-3b34-4303-8076-2015ac3714d1",
+      "name": "Approval Text",
+      "webhookId": "9d4176bb-9e48-4036-a39e-d95c8d5e78b1",
+      "credentials": {
+        "telegramApi": {
+          "id": "y2464Jj0GCO9RMut",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "14aGrkb-kcnHaH-LCYAt0OZC_gUGLkIbQ-oHUBiVJXWM",
+          "mode": "list",
+          "cachedResultName": "Reddit Sales Data ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14aGrkb-kcnHaH-LCYAt0OZC_gUGLkIbQ-oHUBiVJXWM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1555452353,
+          "mode": "list",
+          "cachedResultName": "Low_Intent_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14aGrkb-kcnHaH-LCYAt0OZC_gUGLkIbQ-oHUBiVJXWM/edit#gid=1555452353"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "=",
+            "Title": "=",
+            "Intent_score": "=",
+            "Author": "=",
+            "Karma": "={{$('Parse Author Data').item.json.karma}}",
+            "Account Age": "={{$('Parse Author Data').item.json.account_age_days}}",
+            "Qualifications": "={{$('Parse Author Data').item.json.is_qualified}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Intent_score",
+              "displayName": "Intent_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Author",
+              "displayName": "Author",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Karma",
+              "displayName": "Karma",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Account Age",
+              "displayName": "Account Age",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Qualifications",
+              "displayName": "Qualifications",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -592,
+        -464
+      ],
+      "id": "816cd944-7124-4b77-99cd-340933def880",
+      "name": "Log Low Intent after QC",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ny6GxkCQnHWYWsf7",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "14aGrkb-kcnHaH-LCYAt0OZC_gUGLkIbQ-oHUBiVJXWM",
+          "mode": "list",
+          "cachedResultName": "Reddit Sales Data ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14aGrkb-kcnHaH-LCYAt0OZC_gUGLkIbQ-oHUBiVJXWM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1555452353,
+          "mode": "list",
+          "cachedResultName": "Low_Intent_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14aGrkb-kcnHaH-LCYAt0OZC_gUGLkIbQ-oHUBiVJXWM/edit#gid=1555452353"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{$now.toFormat('yyyy-MM-dd HH:mm')}}",
+            "Title": "={{$('Keyword filter').item.json.title}}\n",
+            "Intent_score": "={{$('JSON parser after Gemini').item.json.intent_score}}",
+            "Author": "={{$('Keyword filter').item.json.author}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Intent_score",
+              "displayName": "Intent_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Author",
+              "displayName": "Author",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1104,
+        496
+      ],
+      "id": "1bea04bf-3e55-4988-9178-e828024a2828",
+      "name": "Log Low Intent",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ny6GxkCQnHWYWsf7",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1264,
+        -16
+      ],
+      "id": "0a9a9ecb-da3b-4bb0-9bc5-7acb147c63a7",
+      "name": "Telegram Trigger",
+      "webhookId": "db23d8a8-3ba1-4636-b6b2-0d12c397afa4",
+      "credentials": {
+        "telegramApi": {
+          "id": "y2464Jj0GCO9RMut",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "14aGrkb-kcnHaH-LCYAt0OZC_gUGLkIbQ-oHUBiVJXWM",
+          "mode": "list",
+          "cachedResultName": "Reddit Sales Data ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14aGrkb-kcnHaH-LCYAt0OZC_gUGLkIbQ-oHUBiVJXWM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1813376797,
+          "mode": "list",
+          "cachedResultName": "High_Intent_Leads ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14aGrkb-kcnHaH-LCYAt0OZC_gUGLkIbQ-oHUBiVJXWM/edit#gid=1813376797"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "Approved",
+            "ID": "={{$('Approval filter').item.json.message.text.replace('APPROVE ', '')}}"
+          },
+          "matchingColumns": [
+            "ID"
+          ],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Intent_score",
+              "displayName": "Intent_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Pain_point",
+              "displayName": "Pain_point",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Draft_reply",
+              "displayName": "Draft_reply",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Author",
+              "displayName": "Author",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reasoning",
+              "displayName": "Reasoning",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Week_number",
+              "displayName": "Week_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Subreddit",
+              "displayName": "Subreddit",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Day_of_week",
+              "displayName": "Day_of_week",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -816,
+        -16
+      ],
+      "id": "e05677c4-57be-4651-9b2e-abbdbf9cda54",
+      "name": "Log Approved Reply",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ny6GxkCQnHWYWsf7",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Parser for HTTP Request 1": {
+      "main": [
+        [
+          {
+            "node": "Merge All Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser for HTTP Request 2": {
+      "main": [
+        [
+          {
+            "node": "Merge All Sources",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Parser for HTTP Request 3": {
+      "main": [
+        [
+          {
+            "node": "Merge All Sources",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Keyword filter": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JSON parser after Gemini": {
+      "main": [
+        [
+          {
+            "node": "Text cleaner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text cleaner": {
+      "main": [
+        [
+          {
+            "node": "Intent Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reddit SaaS RSS": {
+      "main": [
+        [
+          {
+            "node": "Parser for HTTP Request 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reddit Entrepreneur RSS": {
+      "main": [
+        [
+          {
+            "node": "Parser for HTTP Request 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reddit Search RSS": {
+      "main": [
+        [
+          {
+            "node": "Parser for HTTP Request 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge All Sources": {
+      "main": [
+        [
+          {
+            "node": "Keyword filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Score": {
+      "main": [
+        [
+          {
+            "node": "JSON parser after Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Intent Filter": {
+      "main": [
+        [
+          {
+            "node": "Telegram Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Low Intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Alert": {
+      "main": [
+        [
+          {
+            "node": "Approval Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log High Intent": {
+      "main": [
+        []
+      ]
+    },
+    "Weekly Digest Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Prepare Digest Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Digest Data": {
+      "main": [
+        [
+          {
+            "node": "Gemini Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Digest": {
+      "main": [
+        [
+          {
+            "node": "Weekly Digest Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Everyday Trigger": {
+      "main": [
+        [
+          {
+            "node": "Reddit SaaS RSS",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Reddit Entrepreneur RSS",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Reddit Search RSS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Gemini Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approval filter": {
+      "main": [
+        [
+          {
+            "node": "Log Approved Reply",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Reddi author lookup": {
+      "main": [
+        [
+          {
+            "node": "Parse Author Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Author Data": {
+      "main": [
+        [
+          {
+            "node": "Author Quality Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Author Quality Check": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Log Low Intent after QC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approval Text": {
+      "main": [
+        [
+          {
+            "node": "Log High Intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Approval filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "58f23513-f74c-42d3-9a47-28e330783bcd",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5fd1c9a070c3edf8e6331f8f8e580cedc209b2b394935ba6852ad051a86a0624"
+  },
+  "id": "D1BCSiy9bVC71iru",
+  "tags": []
+}
